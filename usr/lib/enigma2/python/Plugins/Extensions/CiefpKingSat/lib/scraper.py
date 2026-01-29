@@ -59,110 +59,6 @@ class KingOfSatScraper:
             log_error(f"Error scraping {sat_url}: {str(e)}")
             return []
 
-    def parse_channel_table(self, soup):
-        """Nova metoda za parsiranje kanala na KingOfSat 2026+ strukturi"""
-        channels = []
-        current_freq = "N/A"
-
-        rows = soup.find_all('tr')
-
-        for row in rows:
-            cells = row.find_all(['td', 'th'])
-            if len(cells) < 8:
-                continue
-
-            # Transponder red – frekvencija u index 2
-            freq_text = cells[2].get_text(strip=True)
-            if re.match(r'^\d{4,5}\.\d{2}$', freq_text):
-                pol = cells[3].get_text(strip=True) if len(cells) > 3 else "-"
-                beam = cells[5].get_text(strip=True) if len(cells) > 5 else "Europe"
-                standard = cells[6].get_text(strip=True) if len(cells) > 6 else "DVB-S2"
-                modulation = cells[7].get_text(strip=True) if len(cells) > 7 else "8PSK"
-                sr_fec = cells[8].get_text(strip=True) if len(cells) > 8 else "30000 2/3"
-
-                current_freq = f"{freq_text} {pol} - {beam} {standard} {modulation} {sr_fec}"
-                continue
-
-            # Kanal red – ime u index 2
-            name = cells[2].get_text(strip=True)
-            if name and len(name) > 1:
-                channel = {}
-                channel['name'] = name
-
-                # Frekvencija (header)
-                channel['frequency'] = current_freq
-
-                channel['country'] = cells[3].get_text(strip=True) if len(cells) > 3 else "-"
-                channel['category'] = cells[4].get_text(strip=True) if len(cells) > 4 else "-"
-
-                # Paketi – razdvajanje po velikim slovima + poznati nazivi
-                package_cell = cells[5].get_text(strip=True) if len(cells) > 5 else "-"
-                if package_cell == "-":
-                    channel['packages'] = []
-                else:
-                    # Split po velikim slovima (npr. AllenteDigiTVFocusSat → ['Allente', 'DigiTV', 'FocusSat'])
-                    packages = re.findall(r'[A-Z][a-zA-Z0-9& ]*', package_cell)
-                    # Dodaj poznate ako nisu uhvaćeni
-                    known_packages = ["Allente", "Digi TV", "DigiTV", "Focus Sat", "FocusSat", "Direct One", "Telly",
-                                      "Neosat", "Conax", "Cryptowork", "Nagravision"]
-                    for k in known_packages:
-                        if k in package_cell and k not in packages:
-                            packages.append(k)
-                    # Ukloni duplikate i očisti
-                    packages = list(dict.fromkeys(p.strip() for p in packages if p.strip()))
-                    channel['packages'] = packages
-
-                # Kodiranje – preskačemo prikaz, ali čuvamo ako treba kasnije
-                enc_cell = cells[6].get_text(strip=True) if len(cells) > 6 else "Unknown"
-                if enc_cell.lower() in ["clear", "fta", "free", "unencrypted"]:
-                    channel['encryptions'] = ["FTA"]
-                else:
-                    channel['encryptions'] = re.findall(r'[A-Z][^A-Z\s]*', enc_cell)
-
-                channels.append(channel)
-
-        return channels
-
-    def parse_channel_table(self, soup, is_package=False):
-        """Parsira kanale – radi i za satelite i za pakete"""
-        channels = []
-        current_freq = "N/A"
-
-        rows = soup.find_all('tr')
-
-        for row in rows:
-            cells = row.find_all(['td', 'th'])
-            if len(cells) < 8:
-                continue
-
-            # Transponder red (samo za satelite)
-            freq_text = cells[2].get_text(strip=True)
-            if re.match(r'^\d{4,5}\.\d{2}$', freq_text) and not is_package:
-                pol = cells[3].get_text(strip=True) if len(cells) > 3 else "-"
-                beam = cells[5].get_text(strip=True) if len(cells) > 5 else "Europe"
-                standard = cells[6].get_text(strip=True) if len(cells) > 6 else "DVB-S2"
-                modulation = cells[7].get_text(strip=True) if len(cells) > 7 else "8PSK"
-                sr_fec = cells[8].get_text(strip=True) if len(cells) > 8 else "30000 2/3"
-
-                current_freq = f"{freq_text} {pol} - {beam} {standard} {modulation} {sr_fec}"
-                continue
-
-            # Kanal red
-            name = cells[2].get_text(strip=True).strip()
-            if name and len(name) > 1:
-                channel = {}
-                channel['name'] = name
-                channel['frequency'] = current_freq  # čak i za pakete će biti "N/A" ili poslednji header
-
-                channel['country'] = cells[3].get_text(strip=True).strip() if len(cells) > 3 else "-"
-                channel['category'] = cells[4].get_text(strip=True).strip() if len(cells) > 4 else "-"
-                channel['package'] = cells[5].get_text(strip=True).strip() if len(cells) > 5 else "-"
-                channel['encryption'] = cells[6].get_text(strip=True).strip() if len(cells) > 6 else "Unknown"
-
-                channels.append(channel)
-
-        return channels
-
     # U metodi get_package_channels (scraper.py) zameni:
     def get_package_channels(self, package_slug):
         cache_key = f"package_{package_slug}"
@@ -328,14 +224,33 @@ class KingOfSatScraper:
 
         return channels
 
-    # scraper.py - izmenite get_news metod:
-    # U scraper.py, unutar get_news metode, nakon parsiranja dodaj:
+    def clean_news_text(self, text):
+        import re
+
+        # ukloni SID / PID / Audio info
+        text = re.sub(r'SID:\d+.*', '', text)
+        text = re.sub(r'PID:\d+.*', '', text)
+
+        # ukloni jezike (Bulgarian, English, itd.)
+        text = re.sub(r'\b[A-Z][a-z]+ian\b', '', text)
+
+        # ukloni zagrade koje nisu MHz
+        text = re.sub(r'\([^)]*\)', lambda m: m.group(0) if 'MHz' in m.group(0) else '', text)
+
+        # normalizuj razmake
+        text = ' '.join(text.split())
+
+        return text.strip()
+
     def get_news(self):
-        """Dohvata vesti sa KingOfSat – grupisanje po datumu i satelitu"""
-        cache_key = "news_grouped"
+        """Dohvata vesti sa KingOfSat – vraća LISTU (kompatibilno sa starim UI)"""
+
+        cache_key = "news_list_v2"
         cached_data = load_from_cache(cache_key)
         if cached_data:
             return cached_data
+
+        news_list = []
 
         try:
             url = f"{self.BASE_URL}news"
@@ -346,97 +261,75 @@ class KingOfSatScraper:
 
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            news_by_date = {}
-            current_date = "Unknown Date"
-            current_satellite = "Unknown Satellite"
-            has_seen_date = False
+            current_date = None
+            current_satellite = None
 
-            for element in soup.find_all(['h4', 'h5', 'p']):
-                # DATE – h4
-                if element.name == 'h4':
-                    h4_text = element.get_text(" ", strip=True).strip()
-                    if any(day in h4_text for day in
-                           ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']):
-                        current_date = h4_text
-                        has_seen_date = True
-                        current_satellite = "Unknown Satellite"
-                        if current_date not in news_by_date:
-                            news_by_date[current_date] = {}
+            for el in soup.find_all(['h4', 'h5', 'p']):
+
+                # =====================
+                # DATUM
+                # =====================
+                if el.name == 'h4':
+                    date_text = el.get_text(" ", strip=True)
+                    if date_text:
+                        current_date = date_text
                     continue
 
-                # SATELLITE – h5
-                if element.name == 'h5':
-                    sat_text = element.get_text(" ", strip=True).strip()
-                    if "Filtering" in sat_text or "display options" in sat_text.lower() or not has_seen_date:
+                # =====================
+                # SATELIT
+                # =====================
+                if el.name == 'h5':
+                    sat_link = el.find('a')
+                    if not sat_link:
                         continue
 
-                    cleaned_sat = sat_text.replace('[', '').replace(']', '').strip()
-                    if "°" in cleaned_sat or any(kw in cleaned_sat.lower() for kw in [
-                        'hot bird', 'astra', 'eutelsat', 'turksat', 'nilesat', 'express', 'thor',
-                        'amos', 'hellas', 'intelsat', 'ses', 'hispa', 'badr', 'yahsat'
-                    ]):
-                        current_satellite = cleaned_sat
+                    sat_text = sat_link.get_text(strip=True)
+                    if not sat_text:
+                        continue
 
-                        if current_satellite not in news_by_date[current_date]:
-                            news_by_date[current_date][current_satellite] = []
+                    current_satellite = sat_text
                     continue
 
-                # NEWS – p
-                if element.name != 'p':
+                # =====================
+                # POJEDINAČNA VEST
+                # =====================
+                if el.name != 'p':
                     continue
 
-                channel_tag = element.find('a', class_='A3')
-                if not channel_tag:
+                time_tag = el.find('a', class_='upd')
+                channel_tag = el.find('a', class_='A3')
+
+                if not time_tag or not channel_tag:
                     continue
 
-                p_text = element.get_text(" ", strip=True).strip()
-
-                # Pronađi sva vremena u tekstu (mogu biti više vesti u jednom <p>)
-                time_matches = list(re.finditer(r'\((\d{1,2}h\d{2})\)', p_text))
-
-                if not time_matches:
+                if not current_date or not current_satellite:
                     continue
 
-                # Ako nema satelita, preskoči
-                if current_satellite == "Unknown Satellite" or current_date == "Unknown Date":
-                    continue
+                time_text = time_tag.get_text(strip=True).strip("()")
+                channel_name = channel_tag.get_text(strip=True)
 
-                # Za svako vreme kreiraj zasebnu vest
-                for i, time_match in enumerate(time_matches):
-                    time_text = time_match.group(1)
+                # kompletan tekst paragrafa
+                raw_text = el.get_text(" ", strip=True)
 
-                    # Odredi deo teksta za ovu vest
-                    start_idx = time_match.start()
-                    if i < len(time_matches) - 1:
-                        end_idx = time_matches[i + 1].start()
-                        item_text = p_text[start_idx:end_idx]
-                    else:
-                        item_text = p_text[start_idx:]
+                # ukloni vreme i ime kanala iz opisa
+                clean_text = raw_text
+                clean_text = clean_text.replace(time_tag.get_text(strip=True), '', 1)
+                clean_text = clean_text.replace(channel_name, '', 1)
 
-                    # Ekstraktuj ime kanala
-                    channel_name = channel_tag.get_text(strip=True).strip()
+                # dodatno čišćenje
+                clean_text = self.clean_news_text(clean_text)
 
-                    # Čišćenje teksta
-                    clean_text = item_text.replace(f'({time_text})', '', 1).strip()
-                    clean_text = re.sub(r'^\s*[-—]\s*', '', clean_text)  # Ukloni vodeći "-" ili "—"
-                    clean_text = ' '.join(clean_text.split())  # Normalizuj beline
+                news_list.append({
+                    "date": current_date,
+                    "satellite": current_satellite,
+                    "time": time_text,
+                    "channel": channel_name,
+                    "description": clean_text
+                })
 
-                    # Dodaj vest
-                    news_item = {
-                        'time': time_text,
-                        'channel': channel_name,
-                        'text': clean_text
-                    }
-
-                    news_by_date[current_date][current_satellite].append(news_item)
-
-            # Sačuvaj u cache
-            save_to_cache(cache_key, news_by_date)
-            return news_by_date
+            save_to_cache(cache_key, news_list)
+            return news_list
 
         except Exception as e:
             log_error(f"Error getting news: {str(e)}")
-            return {}
-
-
-
+            return []
