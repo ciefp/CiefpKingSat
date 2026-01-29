@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<setup>
+    <plugin>
+        <name>CiefpKingSat</name>
+        <author>ciefp</author>
+        <description>KingOfSat Channel Information Plugin</description>
+        <version>1.0</version>
+        <url>https://github.com/ciefp</url>
+        <dependencies>
+            <dependency>python3-requests</dependency>
+            <dependency>python3-beautifulsoup4</dependency>
+            <dependency>python3-lxml</dependency>
+        </dependencies>
+        <requires>enigma2-plugin-extensions-mediascanner</requires>
+        <files>
+            <file type="python" name="plugin.py" />
+            <file type="python" name="ui/main.py" />
+            <file type="python" name="ui/satellitelist.py" />
+            <file type="python" name="ui/packages.py" />
+            <file type="python" name="ui/news.py" />
+            <file type="python" name="lib/scraper.py" />
+            <file type="python" name="lib/utils.py" />
+            <file type="graphic" name="plugin.png" />
+        </files>
+        <screens>
+            <screen name="CiefpKingSatMain" />
+            <screen name="CiefpSatelliteList" />
+            <screen name="CiefpPackagesList" />
+            <screen name="CiefpNewsScreen" />
+        </screens>
+    </plugin>
+</setup>

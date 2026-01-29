@@ -1,0 +1,1 @@
+from .news_single_screen import CiefpNewsSingleScreen
