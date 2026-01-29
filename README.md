@@ -3,10 +3,10 @@
 **KingOfSat Viewer for Enigma2 receivers**  
 Plugin for quick access to satellite TV channel lists, TV packages and latest news from [KingOfSat.net](https://en.kingofsat.net).
 
-![Plugin screenshot](screenshot-main.png)  
-![Plugin screenshot](screenshot-main.png)  
-![Plugin screenshot](screenshot-main.png)  
-![Plugin screenshot](screenshot-main.png)  
+![Plugin screenshot](https://github.com/ciefp/CiefpKingSat/blob/main/ciefpkingsat1.jpg)  
+![Plugin screenshot](https://github.com/ciefp/CiefpKingSat/blob/main/ciefpkingsat2.jpg)  
+![Plugin screenshot](https://github.com/ciefp/CiefpKingSat/blob/main/ciefpkingsat3.jpg)  
+![Plugin screenshot](https://github.com/ciefp/CiefpKingSat/blob/main/ciefpkingsat4.jpg)  
 *(Add your own screenshots here – main menu, satellite list, package list, news)*
 
 ## Features
