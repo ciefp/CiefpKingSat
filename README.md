@@ -7,7 +7,6 @@ Plugin for quick access to satellite TV channel lists, TV packages and latest ne
 ![Plugin screenshot](https://github.com/ciefp/CiefpKingSat/blob/main/ciefpkingsat2.jpg)  
 ![Plugin screenshot](https://github.com/ciefp/CiefpKingSat/blob/main/ciefpkingsat3.jpg)  
 ![Plugin screenshot](https://github.com/ciefp/CiefpKingSat/blob/main/ciefpkingsat4.jpg)  
-*(Add your own screenshots here – main menu, satellite list, package list, news)*
 
 ## Features
 
