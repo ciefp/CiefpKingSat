@@ -28,7 +28,7 @@ Plugin for quick access to satellite TV channel lists, TV packages and latest ne
 
 ## Installation
 
-### Method 1 – Online installer (recommended)
+### Online installer (recommended)
 
 ```bash
 wget -q "--no-check-certificate" https://raw.githubusercontent.com/ciefp/CiefpKingSat/main/installer.sh -O - | /bin/sh
