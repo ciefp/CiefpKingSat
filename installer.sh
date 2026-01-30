@@ -78,7 +78,7 @@ sync
 
 echo ""
 echo "#########################################################"
-echo "#   CiefpKingSat $version INSTALLED SUCCESSFULLY        #"
+echo "#           CiefpKingSat INSTALLED SUCCESSFULLY         #"
 echo "#                ..:: CiefpSettings ::..                #"
 echo "#                  developed by ciefp                   #"
 echo "#########################################################"
