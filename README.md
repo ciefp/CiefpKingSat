@@ -1,6 +1,7 @@
 ### CiefpKingSat - Enigma2 Plugin
 
 **KingOfSat Viewer for Enigma2 receivers**  
+
 Plugin for quick access to satellite TV channel lists, TV packages and latest news from [KingOfSat.net](https://en.kingofsat.net).
 
 ![Plugin screenshot](https://github.com/ciefp/CiefpKingSat/blob/main/ciefpkingsat1.jpg)  
@@ -9,14 +10,27 @@ Plugin for quick access to satellite TV channel lists, TV packages and latest ne
 ![Plugin screenshot](https://github.com/ciefp/CiefpKingSat/blob/main/ciefpkingsat4.jpg)  
 
 ## Features
+## 🔹 CiefpKingSat v2.0 – Major UI & Usability Upgrade 🔹
+- This release represents a major step forward in both usability and visual presentation of the plugin.
+- Starting from a simple text-based channel listing, CiefpKingSat has evolved into a fully structured, 
+- table-based browsing experience with consistent layout across all sections.
 
-- Browse **satellite channel lists** grouped by transponder/frequency  
-  (Name, Country, Category, Package, Encryption/FTA status)
-- View popular **TV packages** grouped by satellite  
-  (Digi TV, Sky, Total TV, MaxTV, Bulsatcom, NOS, Allente, etc.)
-- Read latest **KingOfSat news** (grouped by date and satellite)
-- Local **cache system** (1 hour) – fast loading, less server load
-- Clean and simple interface with ScrollLabel for long lists
+## ✅ What’s New in v2.0
+
+• Completely redesigned Satellite Channels screen with tabular layout
+• Added column headers (Channel, Country, Category, Package, Encryption)
+• Implemented transponder grouping headers for easier frequency overview
+• Introduced pagination system (Next / Prev) instead of continuous scrolling
+• Unified layout and colors across Satellite, Packages, Channels and News screens
+• Packages screen now uses the same table-based channel view
+• News screen converted to paged reading mode with Next / Prev & Left / Right support
+• Improved fonts, spacing and alignment for better readability
+• Clearer encryption display (FTA shown instead of “clear”)
+• Better performance and smoother navigation
+
+## 🎯 Result
+- CiefpKingSat v2.0 offers a cleaner, faster and more professional user experience, 
+- bringing the plugin to a much higher visual and functional level compared to previous versions.
 
 ## Supported images
 

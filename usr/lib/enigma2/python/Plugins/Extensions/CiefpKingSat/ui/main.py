@@ -22,10 +22,12 @@ BACKGROUND = os.path.join(PLUGIN_DIR, "background.png")
 class CiefpKingSatMain(Screen):
     skin = """
     <screen name="CiefpKingSatMain" position="center,center" size="1920,1080" title="CiefpKingSat - KingOfSat Viewer" flags="wfNoBorder">
-        <widget name="menu" position="100,150" size="1300,780" font="Regular;36" itemHeight="39" halign="left"  valign="center" scrollbarMode="showOnDemand" />
+        <widget name="menu" position="100,150" size="1300,780" font="Regular;28" itemHeight="30" halign="left"  valign="center" foregroundColor="#ffffff" backgroundColor="#1a1a1a" scrollbarMode="showOnDemand" />      
+        <!-- PANEL -->
+        <eLabel position="0,0" size="1920,1080" backgroundColor="#021f03" zPosition="-1" />
         <!-- TITLE -->
-        <widget name="title" render="Label" position="100,100" size="1720,60" font="Regular;34" halign="center" valign="center" foregroundColor="#ffffff" backgroundColor="#1a1a1a" zPosition="2" />
-        <widget name="description" position="100,950" size="1720,40" font="Regular;26" itemHeight="30" halign="left"  valign="center" foregroundColor="#cccccc" />
+        <widget name="title" render="Label" position="100,80" size="1720,60" font="Regular;34" halign="center" valign="center" foregroundColor="#ffffff" backgroundColor="#050505" zPosition="2" />
+        <widget name="description" position="100,950" size="1720,40" font="Regular;26" itemHeight="30" halign="left"  valign="center" foregroundColor="#ffffff" backgroundColor="#050505" />
         <!-- BACKGROUND -->
         <widget name="background" position="1420,150" size="400,780" pixmap="%s" alphatest="on" zPosition="1" />
         <!-- Crveni taster - Back -->
@@ -201,7 +203,7 @@ class CiefpKingSatMain(Screen):
         """Prikazuje informacije o pluginu"""
         info_text = (
             "CiefpKingSat - KingOfSat Viewer\n\n"
-            "Version: 1.0\n"
+            "Version: 2.0\n"
             "Author: Ciefp\n"
             "Description: Plugin for viewing KingOfSat satellite and package data\n\n"
             "Features:\n"

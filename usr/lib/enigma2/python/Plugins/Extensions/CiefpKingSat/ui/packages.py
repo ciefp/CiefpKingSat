@@ -8,7 +8,9 @@ from Components.Pixmap import Pixmap
 from Screens.MessageBox import MessageBox
 from . import satellitelist
 from ..lib.scraper import KingOfSatScraper
+from enigma import eListboxPythonMultiContent, gFont, RT_HALIGN_LEFT, RT_HALIGN_CENTER
 import os
+import re
 
 # Putanja do glavnog plugin direktorijuma
 PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -118,14 +120,17 @@ class CiefpPackagesList(Screen):
         ]
     }
 
+
     skin = """
     <screen name="CiefpPackagesList" position="center,center" size="1920,1080" title="Packages" flags="wfNoBorder">
         <!-- TITLE -->
-        <widget name="title" render="Label" position="100,100" size="1720,60" font="Regular;34" halign="center" valign="center" foregroundColor="#ffffff" backgroundColor="#1a1a1a" zPosition="2" />
-        <widget name="menu" position="100,150" size="1300,780" font="Regular;36" itemHeight="39" halign="left"  valign="center" scrollbarMode="showOnDemand" />
+        <widget name="title" render="Label" position="100,80" size="1720,60" font="Regular;34" halign="center" valign="center" foregroundColor="#ffffff" backgroundColor="#050505" zPosition="2" />
+        <widget name="menu" position="100,150" size="1300,780" font="Regular;28" itemHeight="30" halign="left"  valign="center" foregroundColor="#ffffff" backgroundColor="#1a1a1a" scrollbarMode="showOnDemand" />
+        <!-- PANEL -->
+        <eLabel position="0,0" size="1920,1080" backgroundColor="#021f03" zPosition="-1" />
         <!-- BACKGROUND -->
         <widget name="background" position="1420,150" size="400,780" pixmap="%s" alphatest="on" zPosition="1" />
-        <widget name="description" render="Label" position="100,950" size="1720,40" font="Regular;26" halign="left" valign="center" foregroundColor="#cccccc" />
+        <widget name="description" render="Label" position="100,950" size="1720,40" font="Regular;26" halign="left" valign="center" foregroundColor="#ffffff" backgroundColor="#050505" />
         <!-- Crveni taster - Back -->
         <widget name="key_red" position="100,1000" size="300,60" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
         <!-- Pozadina za crveni taster  -->
@@ -146,7 +151,7 @@ class CiefpPackagesList(Screen):
         # Flatten listu za prikaz (koristi klasnu varijablu)
         self.menu_items = []
         for sat, packages in self.PACKAGES_BY_SAT.items():  # ← self.PACKAGES_BY_SAT
-            self.menu_items.append((f"--- {sat} ---", None))
+            self.menu_items.append((f"──────── {sat} ────────", None))
             for package_name, package_url in packages:
                 self.menu_items.append((f" {package_name}", package_url))
 
@@ -201,196 +206,259 @@ class CiefpPackagesList(Screen):
     def exit(self):
         self.close()
 
+
 class CiefpPackageChannels(Screen):
     skin = """
     <screen name="CiefpPackageChannels" position="center,center" size="1920,1080" title="Package Channels" flags="wfNoBorder">
+        <!-- PANEL -->
+        <eLabel position="0,0" size="1920,1080" backgroundColor="#021f03" zPosition="-1" />
+
         <!-- TITLE -->
-        <widget name="title" render="Label" position="100,100" size="1720,60" font="Regular;34" halign="center" valign="center" foregroundColor="#ffffff" backgroundColor="#1a1a1a" zPosition="2" />
+        <widget name="title" render="Label" position="100,80" size="1720,60" font="Regular;34" halign="center" valign="center"
+                foregroundColor="#ffffff" backgroundColor="#050505" zPosition="2" />
 
-        <!-- GLAVNA LISTA KANALA -->
-        <widget name="channels" position="100,180" size="1720,740" font="Regular;28" scrollbarMode="showOnDemand" />
+        <!-- LISTA (TABULAR) -->
+        <widget name="channels" position="100,150" size="1720,800" foregroundColor="#ffffff" backgroundColor="#1a1a1a" scrollbarMode="showNever" />
 
-        <!-- STATUS BAR -->
-        <widget name="status" render="Label" position="100,940" size="1720,50" font="Regular;26" halign="left" valign="center" foregroundColor="#cccccc" backgroundColor="#000000" zPosition="1" />
+        <!-- STATUS BAR --> 
+        <widget name="status" render="Label" position="100,950" size="1720,40" font="Regular;26" halign="left" valign="center"
+                foregroundColor="#cccccc" backgroundColor="#050505" zPosition="1" />
 
         <!-- Crveni taster - Back -->
-        <widget name="key_red" position="100,1000" size="300,60" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
-
-        <!-- Pozadina za crveni taster (opcionalno) -->
+        <widget name="key_red" position="100,1000" size="300,60" font="Bold;26" halign="center" valign="center"
+                foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
         <ePixmap pixmap="skin_default/buttons/red.png" position="100,1000" size="300,60" alphatest="blend" zPosition="1" />
+
+        <!-- Zeleni / Žuti - paging -->
+        <widget name="key_green" position="500,1000" size="300,60" font="Bold;26" halign="center" valign="center"
+                foregroundColor="#080808" backgroundColor="#00a000" zPosition="2" />
+        <ePixmap pixmap="skin_default/buttons/green.png" position="500,1000" size="300,60" alphatest="blend" zPosition="1" />
+
+        <widget name="key_yellow" position="900,1000" size="300,60" font="Bold;26" halign="center" valign="center"
+                foregroundColor="#080808" backgroundColor="#a09d00" zPosition="2" />
+        <ePixmap pixmap="skin_default/buttons/yellow.png" position="900,1000" size="300,60" alphatest="blend" zPosition="1" />
     </screen>
     """
-
     def __init__(self, session, package_name, package_data):
         Screen.__init__(self, session)
         self.session = session
         self.package_name = package_name
-        self.package_data = package_data
+        self.package_data = package_data or {}
 
         self["title"] = Label(f"{package_name} - Channels")
-        self["status"] = Label(f"Package: {package_name} | Loaded {len(package_data.get('channels', []))} channels")
+        self["status"] = Label("")
         self["key_red"] = Label(_("Back"))
+        self["key_green"] = Label(_("Next"))
+        self["key_yellow"] = Label(_("Prev"))
 
-        self["channels"] = ScrollLabel("")
+        # Tabular list (isto kao satellite)
+        self["channels"] = MenuList([], enableWrapAround=False, content=eListboxPythonMultiContent)
+        self["channels"].l.setItemHeight(40)
+        self["channels"].l.setFont(0, gFont("Regular", 26))
+        self["channels"].l.setFont(1, gFont("Bold", 26))
+        self["channels"].l.setFont(2, gFont("Regular", 26))
+        self._disableSelectionBar()
 
-        self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "NavigationActions"], {
-            "cancel": self.exit,
-            "red": self.exit,
-            "up": self["channels"].pageUp,
-            "down": self["channels"].pageDown,
-            "left": self["channels"].pageUp,
-            "right": self["channels"].pageDown
-        }, -1)
+        self["actions"] = ActionMap(
+            ["OkCancelActions", "ColorActions", "NavigationActions"],
+            {
+                "cancel": self.exit,
+                "red": self.exit,
 
-        self.displayChannels()
+                "green": self.nextPage,
+                "yellow": self.prevPage,
 
-    # U klasi CiefpPackageChannels, metodi displayChannels zameni sa:
-    def displayChannels(self):
-        if not self.package_data or 'channels' not in self.package_data or not self.package_data['channels']:
-            self["channels"].setText("No channels available for this package.")
+                "right": self.nextPage,
+                "left": self.prevPage,
+            },
+            -1
+        )
+
+        # Pagination
+        self.all_items = []
+        self.page_size = 20
+        self.current_page = 0
+
+        self._buildItems()
+        self.showPage()
+
+    def _disableSelectionBar(self):
+        """
+        Gasi plavu selection traku (ne koristimo selekciju jer je paging preko boja).
+        Različiti image-i imaju različite metode, pa probamo više opcija.
+        """
+        try:
+            self["channels"].selectionEnabled(0)
+        except Exception:
+            pass
+        try:
+            self["channels"].l.setSelectionEnable(0)
+        except Exception:
+            pass
+        try:
+            self["channels"].l.setSelectable(False)
+        except Exception:
+            pass
+
+    def formatEncryption(self, enc):
+        # 1) Normalizuj u listu tokena
+        if enc is None:
+            tokens = []
+        elif isinstance(enc, (list, tuple, set)):
+            tokens = [str(x) for x in enc if x]
+        else:
+            s = str(enc).strip()
+            # razdvajanje ako je "Conax/Nagra", "Conax, Nagra", "Conax + Nagra" itd.
+            for sep in ["/", ",", ";", "+", "|"]:
+                s = s.replace(sep, " ")
+            tokens = [t for t in s.split() if t]
+
+        if not tokens:
+            return "FTA"
+
+        out = []
+        for t in tokens:
+            tl = t.lower()
+
+            # FTA varijante
+            if tl in ("fta", "free", "clear", "unencrypted", "0"):
+                return "FTA"
+
+            if "videoguard" in tl or "nds" in tl:
+                out.append("VideoGuard")
+            elif "conax" in tl:
+                out.append("Conax")
+            elif "nagra" in tl or "nagravision" in tl:
+                out.append("Nagravision")
+            elif "irdeto" in tl:
+                out.append("Irdeto")
+            elif "viaccess" in tl:
+                out.append("Viaccess")
+            elif "cryptoworks" in tl:
+                out.append("CryptoWorks")
+            elif "biss" in tl:
+                out.append("BISS")
+            else:
+                out.append(t[:12])
+
+        # ukloni duplikate, zadrži redosled
+        seen = set()
+        out2 = []
+        for x in out:
+            if x not in seen:
+                seen.add(x)
+                out2.append(x)
+
+        return "/".join(out2) if out2 else "FTA"
+
+    def buildHeaderEntry(self):
+        return [
+            None,
+            (eListboxPythonMultiContent.TYPE_TEXT, 10, 5, 480, 30, 1, RT_HALIGN_LEFT, "CHANNEL"),
+            (eListboxPythonMultiContent.TYPE_TEXT, 500, 5, 140, 30, 1, RT_HALIGN_LEFT, "COUNTRY"),
+            (eListboxPythonMultiContent.TYPE_TEXT, 650, 5, 200, 30, 1, RT_HALIGN_LEFT, "CATEGORY"),
+            (eListboxPythonMultiContent.TYPE_TEXT, 860, 5, 320, 30, 1, RT_HALIGN_LEFT, "PACKAGE"),
+            (eListboxPythonMultiContent.TYPE_TEXT, 1300, 5, 320, 30, 1, RT_HALIGN_LEFT, "ENC"),
+        ]
+
+    def buildTpHeader(self, text):
+        return [
+            None,
+            (eListboxPythonMultiContent.TYPE_TEXT,
+             0, 5, 1800, 35,
+             2, RT_HALIGN_CENTER,
+              f"────────────────── {text} ──────────────────")
+        ]
+
+    def buildChannelEntry(self, name, country, category, package, enc):
+        return [
+            None,
+            (eListboxPythonMultiContent.TYPE_TEXT, 10, 5, 480, 35, 0, RT_HALIGN_LEFT, str(name)[:50]),
+            (eListboxPythonMultiContent.TYPE_TEXT, 500, 5, 140, 35, 0, RT_HALIGN_LEFT, str(country)[:18]),
+            (eListboxPythonMultiContent.TYPE_TEXT, 650, 5, 200, 35, 0, RT_HALIGN_LEFT, str(category)[:25]),
+            (eListboxPythonMultiContent.TYPE_TEXT, 860, 5, 320, 35, 0, RT_HALIGN_LEFT, str(package)[:35]),
+            (eListboxPythonMultiContent.TYPE_TEXT, 1300, 5, 320, 35, 0, RT_HALIGN_LEFT, str(enc)[:30]),
+        ]
+
+    def _buildItems(self):
+        channels = self.package_data.get("channels", []) or []
+        if not channels:
+            self.all_items = [self.buildTpHeader("No channels available for this package.")]
+            self["status"].setText(f"Package: {self.package_name} | Loaded 0 channels")
             return
 
-        text = ""
-        current_freq = None
-        tp_counter = 0
+        items = [self.buildHeaderEntry()]
+        current_tp = None
+        shown_channels = 0
 
-        channels = self.package_data['channels']
+        for ch in channels:
+            name = (ch.get("name", "") or "").strip()
+            if not name:
+                continue
 
-        # Definicija kolona za pakete
-        COLUMNS = {
-            'name': {'start': 0, 'end': 40, 'title': 'CHANNEL NAME'},
-            'country': {'start': 40, 'end': 55, 'title': 'COUNTRY'},
-            'category': {'start': 55, 'end': 75, 'title': 'CATEGORY'},
-            'package': {'start': 75, 'end': 140, 'title': 'PACKAGE'},
-            'encryption': {'start': 140, 'end': 180, 'title': 'ENCRYPTION'}
-        }
+            tp_text = (ch.get("frequency", "N/A") or "N/A").strip()
 
-        # Izračunaj ukupnu dužinu linije
-        def calculate_total_length():
-            total = 0
-            last_end = 0
-            for col_name, col_info in COLUMNS.items():
-                if last_end < col_info['start']:
-                    total += (col_info['start'] - last_end)
-                total += (col_info['end'] - col_info['start'])
-                last_end = col_info['end']
-            return total
+            # popravi SR/FEC kad je zalepljeno (npr. 220002/3)
+            try:
+                tp_text = re.sub(r'(\d{4,6})(\d{1,2}/\d{1,2})\b', r'\1 \2', tp_text)
+            except Exception:
+                pass
 
-        TOTAL_LENGTH = calculate_total_length()
+            bad = ("frequency", "name", "country", "category", "package", "encryption")
+            if name.lower() in bad or tp_text.lower() in bad:
+                continue
 
-        # Funkcija za skraćivanje teksta
-        def truncate(text, max_len, add_ellipsis=True):
-            if not text:
-                return ""
-            if len(text) <= max_len:
-                return text
-            if add_ellipsis and max_len > 3:
-                return text[:max_len - 3] + "..."
-            return text[:max_len]
+            if not tp_text or tp_text == "N/A":
+                tp_text = "TP: N/A"
 
-        for channel in channels:
-            freq_header = channel.get('frequency', 'N/A')
+            if tp_text != current_tp:
+                current_tp = tp_text
+                items.append(self.buildTpHeader(tp_text))
 
-            # Ako frekvencija nije postavljena, koristi package name
-            if freq_header == 'N/A' or not freq_header:
-                freq_header = f"Package: {self.package_name}"
+            items.append(
+                self.buildChannelEntry(
+                    name,
+                    (ch.get("country", "-") or "-").strip(),
+                    (ch.get("category", "-") or "-").strip(),
+                    (ch.get("package", self.package_name) or self.package_name).strip(),
+                    self.formatEncryption(ch.get("encryption", "")),
+                )
+            )
+            shown_channels += 1
 
-            if freq_header != current_freq:
-                current_freq = freq_header
-                tp_counter += 1
+        self.all_items = items
+        self["status"].setText(f"Package: {self.package_name} | Loaded {shown_channels} channels")
 
-                if tp_counter > 1:
-                    text += "\n\n"
+    def showPage(self):
+        if not self.all_items:
+            self["channels"].setList([])
+            self["status"].setText(f"Package: {self.package_name} | Loaded 0 channels")
+            return
 
-                text += f"{current_freq}\n"
+        start = self.current_page * self.page_size
+        end = start + self.page_size
 
-                # Dodaj header liniju
-                header_line = ""
-                last_end = 0
+        self["channels"].setList(self.all_items[start:end])
+        self._disableSelectionBar()
 
-                for col_name, col_info in COLUMNS.items():
-                    width = col_info['end'] - col_info['start']
+        total_pages = max(1, (len(self.all_items) + self.page_size - 1) // self.page_size)
+        self["status"].setText(
+            f"Package: {self.package_name} | Page {self.current_page + 1}/{total_pages} | Rows {start + 1}-{min(end, len(self.all_items))}"
+        )
 
-                    # Dodaj razmak između kolona ako postoji
-                    if last_end < col_info['start']:
-                        space_count = col_info['start'] - last_end
-                        header_line += " " * space_count
+    def nextPage(self):
+        if not self.all_items:
+            return
+        max_page = (len(self.all_items) - 1) // self.page_size
+        if self.current_page < max_page:
+            self.current_page += 1
+            self.showPage()
 
-                    # Header tekst
-                    header_text = truncate(col_info['title'], width, False)
-                    header_line += f"{header_text:<{width}}"
-
-                    last_end = col_info['end']
-
-                text += header_line + "\n"
-                # SEPARATOR
-                text += "-" * TOTAL_LENGTH + "\n"
-
-            # Formiraj liniju za kanal
-            line = ""
-            last_end = 0
-
-            # Naziv kanala
-            name = (channel.get('name', 'Unknown') or '').strip()
-            width = COLUMNS['name']['end'] - COLUMNS['name']['start']
-            name = truncate(name, width)
-            line += f"{name:<{width}}"
-            last_end = COLUMNS['name']['end']  # ISPRAVLJENO
-
-            # Država
-            country = (channel.get('country', '-') or '').strip()
-            width = COLUMNS['country']['end'] - COLUMNS['country']['start']
-            if last_end < COLUMNS['country']['start']:
-                line += " " * (COLUMNS['country']['start'] - last_end)
-            country = truncate(country, width)
-            line += f"{country:<{width}}"
-            last_end = COLUMNS['country']['end']  # ISPRAVLJENO
-
-            # Kategorija
-            category = (channel.get('category', '-') or '').strip()
-            width = COLUMNS['category']['end'] - COLUMNS['category']['start']
-            if last_end < COLUMNS['category']['start']:
-                line += " " * (COLUMNS['category']['start'] - last_end)
-            category = truncate(category, width)
-            line += f"{category:<{width}}"
-            last_end = COLUMNS['category']['end']  # ISPRAVLJENO
-
-            # Paket
-            package = (channel.get('package', '-') or '').strip()
-            width = COLUMNS['package']['end'] - COLUMNS['package']['start']
-            if last_end < COLUMNS['package']['start']:
-                line += " " * (COLUMNS['package']['start'] - last_end)
-            package = truncate(package, width)
-            line += f"{package:<{width}}"
-            last_end = COLUMNS['package']['end']  # ISPRAVLJENO
-
-            # Enkripcija
-            encryption = ""
-            enc = channel.get('encryption', '')
-            if isinstance(enc, str):
-                enc_lower = enc.lower().strip()
-                if enc_lower in ['clear', 'fta', 'free', '0', 'unencrypted']:
-                    encryption = "FTA"
-                elif enc_lower and enc_lower != 'undefined':
-                    if 'conax' in enc_lower and 'nagravision' in enc_lower:
-                        encryption = "Conax/Nagra"
-                    elif 'videoguard' in enc_lower:
-                        encryption = "VideoGuard"
-                    elif 'cryptoworks' in enc_lower:
-                        encryption = "CryptoWorks"
-                    else:
-                        encryption = truncate(enc, 35)
-
-            width = COLUMNS['encryption']['end'] - COLUMNS['encryption']['start']
-            if last_end < COLUMNS['encryption']['start']:
-                line += " " * (COLUMNS['encryption']['start'] - last_end)
-            encryption = truncate(encryption, width)
-            line += f"{encryption:<{width}}"
-
-            text += line + "\n"
-
-        self["channels"].setText(text.strip())
-        self["status"].setText(f"Package: {self.package_name} | Loaded {len(channels)} channels")
+    def prevPage(self):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.showPage()
 
     def exit(self):
         self.close()
+
