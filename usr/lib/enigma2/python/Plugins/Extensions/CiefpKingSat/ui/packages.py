@@ -132,13 +132,13 @@ class CiefpPackagesList(Screen):
         <widget name="background" position="1420,150" size="400,780" pixmap="%s" alphatest="on" zPosition="1" />
         <widget name="description" render="Label" position="100,950" size="1720,40" font="Regular;26" halign="left" valign="center" foregroundColor="#ffffff" backgroundColor="#050505" />
         <!-- Crveni taster - Back -->
-        <widget name="key_red" position="100,1000" size="300,60" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
+        <widget name="key_red" position="100,1000" size="860,40" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
         <!-- Pozadina za crveni taster  -->
-        <ePixmap pixmap="skin_default/buttons/red.png" position="100,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/red.png" position="100,1000" size="860,40" alphatest="blend" zPosition="1" />
         <!-- Zeleni taster - Back -->
-        <widget name="key_green" position="500,1000" size="300,60" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#00a000" zPosition="2" />
+        <widget name="key_green" position="960,1000" size="860,40" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#00a000" zPosition="2" />
         <!-- Pozadina za Zeleni taster  -->
-        <ePixmap pixmap="skin_default/buttons/green.png" position="500,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/green.png" position="960,1000" size="860,40" alphatest="blend" zPosition="1" />
     </screen>
     """ % BACKGROUND
 
@@ -225,18 +225,18 @@ class CiefpPackageChannels(Screen):
                 foregroundColor="#cccccc" backgroundColor="#050505" zPosition="1" />
 
         <!-- Crveni taster - Back -->
-        <widget name="key_red" position="100,1000" size="300,60" font="Bold;26" halign="center" valign="center"
+        <widget name="key_red" position="100,1000" size="573,40" font="Bold;26" halign="center" valign="center"
                 foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
-        <ePixmap pixmap="skin_default/buttons/red.png" position="100,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/red.png" position="100,1000" size="573,40" alphatest="blend" zPosition="1" />
 
         <!-- Zeleni / Žuti - paging -->
-        <widget name="key_green" position="500,1000" size="300,60" font="Bold;26" halign="center" valign="center"
+        <widget name="key_green" position="673,1000" size="573,40" font="Bold;26" halign="center" valign="center"
                 foregroundColor="#080808" backgroundColor="#00a000" zPosition="2" />
-        <ePixmap pixmap="skin_default/buttons/green.png" position="500,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/green.png" position="673,1000" size="300,60" alphatest="blend" zPosition="1" />
 
-        <widget name="key_yellow" position="900,1000" size="300,60" font="Bold;26" halign="center" valign="center"
+        <widget name="key_yellow" position="1246,1000" size="573,40" font="Bold;26" halign="center" valign="center"
                 foregroundColor="#080808" backgroundColor="#a09d00" zPosition="2" />
-        <ePixmap pixmap="skin_default/buttons/yellow.png" position="900,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/yellow.png" position="1246,1000" size="300,60" alphatest="blend" zPosition="1" />
     </screen>
     """
     def __init__(self, session, package_name, package_data):

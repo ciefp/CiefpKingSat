@@ -31,21 +31,21 @@ class CiefpKingSatMain(Screen):
         <!-- BACKGROUND -->
         <widget name="background" position="1420,150" size="400,780" pixmap="%s" alphatest="on" zPosition="1" />
         <!-- Crveni taster - Back -->
-        <widget name="key_red" position="100,1000" size="300,60" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
+        <widget name="key_red" position="100,1000" size="430,40" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
         <!-- Pozadina za crveni taster  -->
-        <ePixmap pixmap="skin_default/buttons/red.png" position="100,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/red.png" position="100,1000" size="430,40" alphatest="blend" zPosition="1" />
         <!-- Zeleni taster - Back -->
-        <widget name="key_green" position="500,1000" size="300,60" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#00a000" zPosition="2" />
+        <widget name="key_green" position="530,1000" size="430,40" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#00a000" zPosition="2" />
         <!-- Pozadina za Zeleni taster  -->
-        <ePixmap pixmap="skin_default/buttons/green.png" position="500,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/green.png" position="530,1000" size="430,40" alphatest="blend" zPosition="1" />
         <!-- Žuti taster - Back -->
-        <widget name="key_yellow" position="900,1000" size="300,60" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a09d00" zPosition="2" />
+        <widget name="key_yellow" position="960,1000" size="430,40" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a09d00" zPosition="2" />
         <!-- Pozadina za žuti taster  -->
-        <ePixmap pixmap="skin_default/buttons/yellow.png" position="900,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/yellow.png" position="960,1000" size="430,40" alphatest="blend" zPosition="1" />
         <!-- Plavi taster - Back -->
-        <widget name="key_blue" position="1300,1000" size="300,60" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#0003a0" zPosition="2" />
+        <widget name="key_blue" position="1390,1000" size="430,40" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#0003a0" zPosition="2" />
         <!-- Pozadina za plavi taster  -->
-        <ePixmap pixmap="skin_default/buttons/blue.png" position="1300,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/blue.png" position="1390,1000" size="430,40" alphatest="blend" zPosition="1" />
     </screen>
     """ % BACKGROUND
     

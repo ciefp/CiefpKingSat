@@ -24,20 +24,20 @@ class CiefpNewsSingleScreen(Screen):
         <widget name="status" render="Label" position="100,980" size="1720,40" font="Regular;26" halign="left" valign="center" foregroundColor="#ffffff" backgroundColor="#050505" zPosition="1" />
 
         <!-- Red - Exit -->
-        <widget name="key_red" position="100,1030" size="300,40" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
-        <ePixmap pixmap="skin_default/buttons/red.png" position="100,1030" size="300,40" alphatest="blend" zPosition="1" />
+        <widget name="key_red" position="100,1030" size="430,40" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
+        <ePixmap pixmap="skin_default/buttons/red.png" position="100,1030" size="430,40" alphatest="blend" zPosition="1" />
 
         <!-- Green - Next -->
-        <widget name="key_green" position="500,1030" size="300,40" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#00a000" zPosition="2" />
-        <ePixmap pixmap="skin_default/buttons/green.png" position="500,1030" size="300,40" alphatest="blend" zPosition="1" />
+        <widget name="key_green" position="530,1030" size="430,40" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#00a000" zPosition="2" />
+        <ePixmap pixmap="skin_default/buttons/green.png" position="530,1030" size="430,40" alphatest="blend" zPosition="1" />
 
         <!-- Yellow - Prev -->
-        <widget name="key_yellow" position="900,1030" size="300,40" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a0a000" zPosition="2" />
-        <ePixmap pixmap="skin_default/buttons/yellow.png" position="900,1030" size="300,40" alphatest="blend" zPosition="1" />
+        <widget name="key_yellow" position="960,1030" size="430,40" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a0a000" zPosition="2" />
+        <ePixmap pixmap="skin_default/buttons/yellow.png" position="960,1030" size="430,40" alphatest="blend" zPosition="1" />
 
         <!-- Blue - Refresh -->
-        <widget name="key_blue" position="1300,1030" size="300,40" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#0000a0" zPosition="2" />
-        <ePixmap pixmap="skin_default/buttons/blue.png" position="1300,1030" size="300,40" alphatest="blend" zPosition="1" />
+        <widget name="key_blue" position="1390,1030" size="430,40" font="Bold;26" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#0000a0" zPosition="2" />
+        <ePixmap pixmap="skin_default/buttons/blue.png" position="1390,1030" size="430,40" alphatest="blend" zPosition="1" />
     </screen>"""
 
     def __init__(self, session):

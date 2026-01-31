@@ -23,17 +23,17 @@ class CiefpSatelliteList(Screen):
         <widget name="list" position="100,150" size="1720,800" foregroundColor="#ffffff" backgroundColor="#1a1a1a" scrollbarMode="showNever" />
         <widget name="status" position="100,950" size="1720,40" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#050505" halign="left" />
         <!-- Crveni taster - Back -->
-        <widget name="key_red" position="100,1000" size="300,60" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
+        <widget name="key_red" position="100,1000" size="573,40" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a00000" zPosition="2" />
         <!-- Pozadina za crveni taster  -->
-        <ePixmap pixmap="skin_default/buttons/red.png" position="100,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/red.png" position="100,1000" size="5730,40" alphatest="blend" zPosition="1" />
         <!-- Zeleni taster - Back -->
-        <widget name="key_green" position="500,1000" size="300,60" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#00a000" zPosition="2" />
+        <widget name="key_green" position="673,1000" size="573,40" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#00a000" zPosition="2" />
         <!-- Pozadina za Zeleni taster  -->
-        <ePixmap pixmap="skin_default/buttons/green.png" position="500,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/green.png" position="673,1000" size="573,40" alphatest="blend" zPosition="1" />
         <!-- Žuti taster - Back -->
-        <widget name="key_yellow" position="900,1000" size="300,60" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a09d00" zPosition="2" />
+        <widget name="key_yellow" position="1246,1000" size="573,40" font="Bold;28" halign="center" valign="center" foregroundColor="#080808" backgroundColor="#a09d00" zPosition="2" />
         <!-- Pozadina za Žuti taster  -->
-        <ePixmap pixmap="skin_default/buttons/yellow.png" position="900,1000" size="300,60" alphatest="blend" zPosition="1" />
+        <ePixmap pixmap="skin_default/buttons/yellow.png" position="1246,1000" size="573,40" alphatest="blend" zPosition="1" />
     </screen>
     """
 
