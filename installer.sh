@@ -6,6 +6,9 @@ version='1.0'
 changelog='\nInitial release\nSatellite & Package lists from KingOfSat\nNews viewer\nCache system'
 ##############################################################
 
+# Check if we should skip restart (for batch installations)
+SKIP_REBOOT="${SKIP_REBOOT:-0}"
+
 TMPPATH=/tmp/CiefpKingSat
 
 if [ ! -d /usr/lib64 ]; then
@@ -79,11 +82,20 @@ sync
 echo ""
 echo "#########################################################"
 echo "#           CiefpKingSat INSTALLED SUCCESSFULLY         #"
-echo "#                ..:: CiefpSettings ::..                #"
 echo "#                  developed by ciefp                   #"
+echo "#                  .::CiefpSettings::.                  #"
+echo "#               https://github.com/ciefp                #"
 echo "#########################################################"
-echo "#           Your device will RESTART Now                #"
-echo "#########################################################"
-sleep 5
-killall -9 enigma2
+
+# Only restart if SKIP_REBOOT is not set to 1
+if [ "$SKIP_REBOOT" = "0" ]; then
+    echo "#           your Device will RESTART Now                #"
+    echo "#########################################################"
+    sleep 5
+    killall -9 enigma2
+else
+    echo "#        Restart skipped (batch installation)           #"
+    echo "#########################################################"
+fi
+
 exit 0
