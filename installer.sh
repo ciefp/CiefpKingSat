@@ -1,78 +1,66 @@
 #!/bin/bash
-##setup command=wget -q "--no-check-certificate" https://raw.githubusercontent.com/ciefp/CiefpKingSat/main/installer.sh -O - | /bin/sh
+## setup command: wget -q "--no-check-certificate" https://raw.githubusercontent.com/ciefp/CiefpKingSat/main/installer.sh -O - | /bin/sh
 
-######### Only These 2 lines to edit with new version ######
-version='1.0'
-changelog='\nInitial release\nSatellite & Package lists from KingOfSat\nNews viewer\nCache system'
-##############################################################
+version='1.1'
+changelog='Python detection fix for Scarthgap/OpenPLi 9'
 
-# Check if we should skip restart (for batch installations)
+# Check if we should skip restart (za tvoj multiboot plugin)
 SKIP_REBOOT="${SKIP_REBOOT:-0}"
 
 TMPPATH=/tmp/CiefpKingSat
-
 if [ ! -d /usr/lib64 ]; then
-	PLUGINPATH=/usr/lib/enigma2/python/Plugins/Extensions/CiefpKingSat
+    PLUGINPATH=/usr/lib/enigma2/python/Plugins/Extensions/CiefpKingSat
 else
-	PLUGINPATH=/usr/lib64/enigma2/python/Plugins/Extensions/CiefpKingSat
+    PLUGINPATH=/usr/lib64/enigma2/python/Plugins/Extensions/CiefpKingSat
 fi
 
-# Check internet connection
 echo "Checking internet connection..."
 if ! ping -c 1 8.8.8.8 >/dev/null 2>&1; then
-    echo "No internet connection! Please check your network and try again."
+    echo "No internet connection! Check DNS (Nameserver) settings."
     exit 1
 fi
 
-# Check opkg
-if ! command -v opkg >/dev/null 2>&1; then
-    echo "ERROR: opkg not found. This installer requires opkg package manager."
-    exit 1
-fi
+# OSIGURAJ OPKG UPDATE (Ključno za OpenPLi)
+echo "Updating opkg feeds..."
+opkg update >/dev/null 2>&1
 
-# Check Python version and required packages
+# NOVA DETEKCIJA PYTHONA
 echo "Checking Python version and dependencies..."
-if python --version 2>&1 | grep -q '^Python 3\.'; then
-    echo "Python 3 detected"
-    PYTHON=PY3
-    PKG_REQUESTS="python3-requests"
-    PKG_BS4="python3-beautifulsoup4"
-    PKG_LXML="python3-lxml"
+if command -v python3 >/dev/null 2>&1; then
+    echo "Python 3 detected."
+    PYTHON_PKGS="python3-requests python3-beautifulsoup4 python3-lxml python3-six"
+elif command -v python2 >/dev/null 2>&1; then
+    echo "Python 2 detected."
+    PYTHON_PKGS="python-requests python-beautifulsoup4 python-xml python-six"
 else
-    echo "Python 2 detected - some features may not work properly"
-    PYTHON=PY2
-    PKG_REQUESTS="python-requests"
-    PKG_BS4="python-beautifulsoup4"
-    PKG_LXML="python-lxml"
+    # Ako nema ni jednog ni drugog, verovatno je problem sa PATH, ali pretpostavi Py3 za nove slike
+    echo "Could not auto-detect Python, trying Python 3 defaults..."
+    PYTHON_PKGS="python3-requests python3-beautifulsoup4 python3-lxml"
 fi
 
-# Update opkg
-opkg update >/dev/null 2>&1 || { echo "opkg update failed! Check internet."; exit 1; }
-
-# Install missing dependencies
-for pkg in $PKG_REQUESTS $PKG_BS4 $PKG_LXML; do
-    if ! opkg list-installed | grep -q "^$pkg "; then
+# INSTALACIJA ZAVISNOSTI
+for pkg in $PYTHON_PKGS; do
+    if opkg list-installed | grep -q "^$pkg -"; then
+        echo "$pkg is already installed."
+    else
         echo "Installing $pkg..."
-        opkg install $pkg || { echo "Failed to install $pkg"; exit 1; }
+        opkg install $pkg || echo "Warning: Failed to install $pkg, plugin might fail."
     fi
 done
 
-echo "All dependencies are installed."
-
-# Download and extract plugin
-echo "Downloading CiefpKingSat $version..."
+# DOWNLOAD I INSTALACIJA PLUGINA
+echo "Downloading CiefpKingSat..."
 cd /tmp
 rm -rf $TMPPATH >/dev/null 2>&1
 mkdir -p $TMPPATH
 cd $TMPPATH
 
-wget https://github.com/ciefp/CiefpKingSat/archive/refs/heads/main.tar.gz || { echo "Download failed!"; exit 1; }
+wget --no-check-certificate https://github.com/ciefp/CiefpKingSat/archive/refs/heads/main.tar.gz || { echo "Download failed!"; exit 1; }
 tar -xzf main.tar.gz
 cp -r CiefpKingSat-main/usr /
 
-# Check if plugin installed correctly
 if [ ! -d $PLUGINPATH ]; then
-    echo "Something went wrong... Plugin not installed."
+    echo "Something went wrong... Plugin folder not found."
     exit 1
 fi
 
@@ -87,15 +75,11 @@ echo "#                  .::CiefpSettings::.                  #"
 echo "#               https://github.com/ciefp                #"
 echo "#########################################################"
 
-# Only restart if SKIP_REBOOT is not set to 1
+# REBOOT LOGIKA (Poštuje tvoj SKIP_REBOOT flag)
 if [ "$SKIP_REBOOT" = "0" ]; then
-    echo "#           your Device will RESTART Now                #"
-    echo "#########################################################"
-    sleep 5
+    echo "#           Your device will RESTART Now                #"
+    sleep 3
     killall -9 enigma2
 else
-    echo "#        Restart skipped (batch installation)           #"
-    echo "#########################################################"
+    echo "#           Installation finished (No Reboot)           #"
 fi
-
-exit 0
