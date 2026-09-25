@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
+import html as html_module
 from .utils import save_to_cache, load_from_cache, log_error, get_user_agent
 
 class KingOfSatScraper:
@@ -223,6 +224,192 @@ class KingOfSatScraper:
             channels.append(channel)
 
         return channels
+
+    def get_dab_transmissions(self):
+        """Dohvata DAB over DVB podatke sa KingOfSat-a.
+
+        Parser je namerno zasnovan na sadržaju redova (<tr>), a ne na
+        konkretnim CSS klasama, jer se HTML KingOfSat-a povremeno menja.
+        Rezultat je lista mux objekata kompatibilna sa DAB ekranom.
+        """
+        cache_key = "dab_transmissions_v7"
+        cached_data = load_from_cache(cache_key)
+        if cached_data:
+            return cached_data
+
+        url = f"{self.BASE_URL}dab"
+        try:
+            response = self.session.get(url, timeout=self.timeout)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, "html.parser")
+            results = self._parse_dab_html_bs(soup)
+
+            if results:
+                save_to_cache(cache_key, results)
+            return results
+
+        except requests.exceptions.Timeout:
+            log_error(f"Timeout scraping {url}")
+        except requests.exceptions.RequestException as e:
+            log_error(f"HTTP error scraping DAB: {e}")
+        except Exception as e:
+            import traceback
+            log_error(f"Error getting DAB: {e}")
+            print(traceback.format_exc())
+        return []
+
+    @staticmethod
+    def _text(node):
+        return " ".join(node.stripped_strings) if node else ""
+
+    def _parse_dab_html_bs(self, soup):
+        """Parse the current KingOfSat /dab layout.
+
+        A satellite/frequency row is followed by one or more DAB mux rows;
+        every mux is followed by its DAB+ station rows.  We intentionally
+        use cell text and semantic markers rather than CSS class names.
+        """
+        results = []
+        current_satellite = "Unknown"
+        current_position = ""
+        current_frequency = "N/A"
+        current_mux = None
+
+        for row in soup.find_all("tr"):
+            text = self._text(row)
+            if not text:
+                continue
+
+            cells = [self._text(c) for c in row.find_all(["td", "th"])]
+            lower = text.lower()
+
+            # Satellite/frequency row, e.g.:
+            # 7.0°E | Eutelsat 7C | ... | 11513.80 V | DWW4 | Western | DVB-S2 | QPSK | 17017 | 2/3 | ...
+            freq_match = re.search(r'\b(\d{4,5}\.\d{2})\s+([HV])\b', text)
+            if freq_match:
+                current_frequency = "%s %s" % (freq_match.group(1), freq_match.group(2))
+                current_mux = None
+
+                # Izvuci SR, standard, modulaciju i FEC iz reda
+                # Format: "7.0°E Eutelsat 7C DWW4 Western DVB-S2 QPSK 17017 2/3 2026-07-27"
+                sr_match = re.search(r'\b(\d{4,5})\s+(\d+/\d+)\b', text)
+                standard_match = re.search(r'\b(DVB-S2X|DVB-S2|DVB-S)\b', text, re.I)
+                modulation_match = re.search(r'\b(QPSK|8PSK|16APSK|32APSK)\b', text, re.I)
+
+                current_sr = sr_match.group(1) if sr_match else ""
+                current_fec = sr_match.group(2) if sr_match else ""
+                current_standard = standard_match.group(1) if standard_match else ""
+                current_modulation = modulation_match.group(1) if modulation_match else ""
+
+                # Sačuvaj u zasebne promenljive koje će se koristiti pri kreiranju mux-a
+                self._current_sr = current_sr
+                self._current_fec = current_fec
+                self._current_standard = current_standard
+                self._current_modulation = current_modulation
+
+                # Prefer the explicit position/satellite cells at the start.
+                if len(cells) >= 2:
+                    pos = cells[0]
+                    sat = cells[1]
+                    if re.search(r'\d+(?:\.\d+)?°[EW]', pos):
+                        current_position = pos
+                    if sat and sat.lower() not in ("name", "satellite"):
+                        current_satellite = sat
+
+                # Also support the h5 heading used by some KingOfSat versions.
+                parent = row.find_previous("h5")
+                if parent:
+                    links = parent.find_all("a")
+                    if links:
+                        current_satellite = self._text(links[0]) or current_satellite
+                    if len(links) > 1:
+                        current_position = self._text(links[1]) or current_position
+                continue
+
+            # DAB mux row. Current page example:
+            # PID 101 (MPE) ... | IP: 239... port 50020 | DAB | Mux | EID: 0x....
+            if re.search(r'\bPID\s+\d+\s*\(MPE\)', text, re.I) and re.search(r'\bDAB\b', text, re.I):
+                pid_match = re.search(r'\bPID\s+(\d+)\s*\(MPE\)', text, re.I)
+                ip_match = re.search(r'\bIP(?:\s+address)?\s*[:|]?\s*([0-9.]+)\s+(?:port|\|\s*port)\s+(\d+)', text, re.I)
+                if not ip_match:
+                    ip_match = re.search(r'\b([0-9]{1,3}(?:\.[0-9]{1,3}){3})\s+port\s+(\d+)', text, re.I)
+                eid_match = re.search(r'\bEID\s*:\s*(0x[0-9a-fA-F]+)', text, re.I)
+
+                mux_name = ""
+                # Cell-based extraction is safest: the cell after DAB is mux name.
+                for i, cell in enumerate(cells):
+                    if cell.strip().upper() == "DAB" and i + 1 < len(cells):
+                        mux_name = cells[i + 1].strip()
+                        break
+                if not mux_name:
+                    m = re.search(r'\bDAB\b\s*\|?\s*(.*?)\s*(?:\|\s*EID\s*:|$)', text, re.I)
+                    if m:
+                        mux_name = m.group(1).strip(" |-")
+
+                current_mux = {
+                    "satellite": ("%s (%s)" % (current_satellite, current_position)) if current_position else current_satellite,
+                    "position": current_position,
+                    "frequency": current_frequency,
+                    "mux_name": mux_name or "DAB",
+                    "ip_address": ip_match.group(1) if ip_match else "",
+                    "port": ip_match.group(2) if ip_match else "",
+                    "pid": pid_match.group(1) if pid_match else "",
+                    "eid": eid_match.group(1) if eid_match else "",
+                    "sr": getattr(self, "_current_sr", ""),
+                    "fec": getattr(self, "_current_fec", ""),
+                    "standard": getattr(self, "_current_standard", ""),
+                    "modulation": getattr(self, "_current_modulation", ""),
+                    "stations": [],
+                }
+                results.append(current_mux)
+                continue
+
+            # DAB+ station row.
+            if current_mux is not None:
+                dab_indexes = [i for i, value in enumerate(cells) if value.strip().upper() == "DAB+"]
+                if not dab_indexes:
+                    continue
+
+                # Uzmi POSLEDNJI DAB+ (prvi je često ikona/alt tekst)
+                audio_index = dab_indexes[-1]
+
+                # Ako je DAB+ na poziciji 0, to je verovatno header red
+                if audio_index <= 0:
+                    continue
+
+                name = cells[audio_index - 1].strip()
+                if not name or name.lower() in ("identification", "audio mode"):
+                    continue
+
+                rest = cells[audio_index + 1:]
+                current_mux["stations"].append({
+                    "name": name,
+                    "audio_mode": cells[audio_index],
+                    "ch_id": rest[0] if len(rest) > 0 else "",
+                    "sid": rest[1] if len(rest) > 1 else "",
+                    "bitrate": rest[2] if len(rest) > 2 else "",
+                    "update": rest[3] if len(rest) > 3 else "",
+                })
+        # De-duplicate only exact mux records.
+        cleaned = []
+        seen = set()
+        for mux in results:
+            key = (
+                mux.get("satellite", ""), mux.get("frequency", ""),
+                mux.get("ip_address", ""), mux.get("port", ""),
+                mux.get("mux_name", ""), mux.get("eid", "")
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            cleaned.append(mux)
+        return cleaned
+
+    # Zadržavamo stari naziv metode radi kompatibilnosti sa eventualnim
+    # drugim delovima plugina koji je pozivaju.
+    def _parse_dab_html(self, html):
+        soup = BeautifulSoup(html, "html.parser")
+        return self._parse_dab_html_bs(soup)
 
     def clean_news_text(self, text):
         import re

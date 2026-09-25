@@ -29,7 +29,7 @@ def main(session, **kwargs):
 def Plugins(**kwargs):
     return [PluginDescriptor(
         name="CiefpKingSat",
-        description=_("KingOfSat Channel Information"),
+        description=_("KingOfSat Channel Information v2.1"),
         where=PluginDescriptor.WHERE_PLUGINMENU,
         icon="plugin.png",
         fnc=main

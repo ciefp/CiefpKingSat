@@ -7,7 +7,7 @@ from Components.MenuList import MenuList
 from Components.Label import Label
 from Components.Pixmap import Pixmap
 from enigma import eListboxPythonMultiContent, gFont, RT_HALIGN_LEFT, RT_VALIGN_CENTER
-from . import satellitelist, packages, news_single_screen
+from . import satellitelist, packages, news_single_screen, dab
 import json
 import os
 import glob
@@ -58,6 +58,7 @@ class CiefpKingSatMain(Screen):
         
         # Sateliti iz specifikacije
         self.satellites = [
+            ("DAB over DVB transmissions - All Satellites", "dab-all"),  # NOVO - prva stavka
             ("75.0°E - ABS-2", "pos-75E"),
             ("70.5°E - Eutelsat 70B", "pos-70.5E"),
             ("68.5°E - Intelsat 20 (IS-20)", "pos-68.5E"),
@@ -119,13 +120,20 @@ class CiefpKingSatMain(Screen):
             "yellow": self.news,
             "blue": self.tools_menu
         }, -1)
-        
+
     def ok(self):
         selection = self["menu"].getCurrent()
         if selection:
             sat_name, sat_url = selection
+
+            # Provera za DAB opciju
+            if sat_url == "dab-all":
+                self.session.open(dab.CiefpDabList)
+                return
+
+            # Standardno ponašanje za satelite
             self.session.open(satellitelist.CiefpSatelliteList, sat_name, sat_url)
-    
+        
     def packages(self):
         self.session.open(packages.CiefpPackagesList)
     
